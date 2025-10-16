@@ -2,9 +2,9 @@ import carla
 import time
 
 import config
-import sensor_callbacks
-from carla_manager import CarlaManager
-from spawner import Spawner
+import carla_bridge.sensor_callbacks as sensor_manager
+from carla_bridge.carla_manager import CarlaManager
+from carla_bridge.spawner import Spawner
 
 def main():
     #shared dictionary
@@ -40,7 +40,7 @@ def main():
         if not radar_sensor: return
 
         #start listen sensor
-        radar_sensor.listen(lambda data: sensor_callbacks.radar_callback(data, radar_data))
+        radar_sensor.listen(lambda data: sensor_manager.radar_callback(data, radar_data))
         print("Radar sensor is activated")
 
         print("Start EBS test...")

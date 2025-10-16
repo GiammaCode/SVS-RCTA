@@ -4,7 +4,6 @@ import carla
 import random
 import config
 
-
 class Spawner:
     "handles the generation of actors"
     def __init__(self, world, actor_list):

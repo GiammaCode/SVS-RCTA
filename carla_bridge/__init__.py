@@ -1,5 +1,4 @@
 """
-Questo package contiene tutte le classi che interagiscono direttamente con l'API di CARLA, fungendo da "ponte"
-tra il  codice e il simulatore.
+Package contains all elements that interacts with CARLA's API, like a bridge (code-simulator)
 
 """
