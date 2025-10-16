@@ -1,0 +1,10 @@
+# Simulatore CARLA
+carla==0.9.15
+numpy
+opencv-python
+torch
+torchvision
+pygame==2.6.1
+
+paho-mqtt
+PyYAML
