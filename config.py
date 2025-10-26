@@ -1,3 +1,5 @@
+import carla
+
 """
 Configuration constants for the CARLA simulation.
 """
@@ -7,8 +9,36 @@ HOST = 'localhost'
 PORT = 2000
 TIMEOUT = 10
 
+#Scenarios
+MAP_NAME = 'Town05'
+
 EGO_VEHICLE_MODEL = 'vehicle.audi.tt'
-TARGET_VEHICLE_MODEL = 'vehicle.volkswagen.t2'
+BLOCKING_VEHICLE_MODELS = [
+    'vehicle.toyota.prius',
+    'vehicle.nissan.patrol',
+    'vehicle.ford.mustang',
+    'vehicle.chevrolet.impala'
+]
+
+EGO_SPAWN_TRANSFORM = carla.Transform(
+    carla.Location(x = 184.5, y=-5.5, z = 0.5),
+    carla.Rotation(yaw=180)  #ready to reverse direction (retromarcia)
+)
+
+BLOCKING_VEHICLE_TRANSFORMS = [
+    carla.Transform(
+        carla.Location(x=-184.5, y=-3.0, z=0.5),
+        carla.Rotation(yaw=180)
+    ),
+    carla.Transform(
+        carla.Location(x=-184.5, y=-8.0, z=0.5),
+        carla.Rotation(yaw=180)
+    ),
+     carla.Transform(
+        carla.Location(x=-184.5, y=-10.5, z=0.5),
+        carla.Rotation(yaw=180)
+    )
+]
 
 # Emergency Braking System (EBS) settings
 TTC_THRESHOLD = 2 #seconds
