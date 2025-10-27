@@ -10,32 +10,30 @@ from carla_bridge.spawner import Spawner
 def main():
     try:
         with CarlaManager() as manager:
+            #load map
             print(f"Loading map: {config.MAP_NAME}")
             manager.client.load_world(config.MAP_NAME)
-
             manager.world = manager.client.get_world()
             manager.world.tick()
             print("Map loaded")
 
+            #initialize spawner
             spawner = Spawner(manager.world, manager.actor_list)
-            ego_vehicle = parking_lot.setup_static_scenario(manager.world, spawner)
+            ego_vehicle, target_vehicle = parking_lot.setup_parking_scenario(manager.world, spawner)
 
-            if not ego_vehicle:
+            if not ego_vehicle or not target_vehicle:
                 print("Error, scenario creation failed")
                 return
 
+            #setting spectator's view
             print("Setting spectator view")
             spectator = manager.world.get_spectator()
-            ego_transform = ego_vehicle.get_transform()
 
-            # Posiziona lo spettatore 8m dietro e 5m sopra l'auto
-            # uso 'get_forward_vector()' per essere relativi alla rotazione dell'auto
             spectator_transform = carla.Transform(
-                ego_transform.location + ego_transform.get_forward_vector() * -8.0 + carla.Location(z=5.0),
-                carla.Rotation(pitch=-30, yaw=ego_transform.rotation.yaw)  # Guarda in basso verso l'auto
+                config.EGO_SPAWN_TRANSFORM.location + carla.Location(x=20, y=10, z=10.0),
+                carla.Rotation(pitch=-45, yaw=-150)  # Angolazione per vedere l'incrocio
             )
             spectator.set_transform(spectator_transform)
-
 
             print("Static scenario loaded")
             print("WASD to move camera")
@@ -43,7 +41,7 @@ def main():
 
             while True:
                 manager.world.tick()
-                time.sleep(0.1)
+                time.sleep(0.05) #20FPS
 
     except KeyboardInterrupt:
         print("\nScript interrotto dall'utente.")
