@@ -40,6 +40,10 @@ def main():
                 print("Error, scenario creation failed")
                 return
 
+            print("Initializing Perception and Sensor Manager...")
+            perception_system = RctaPerception()
+            sensor_manager = SensorManager(manager.world, manager.actor_list)
+
             #initialize perception and cameras
             rear_cam, left_cam, right_cam = sensor_manager.setup_rcta_cameras(ego_vehicle)
             if not (rear_cam and left_cam and right_cam):
