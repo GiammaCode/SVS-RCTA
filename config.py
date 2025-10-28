@@ -21,22 +21,22 @@ BLOCKING_VEHICLE_MODELS = [
 ]
 
 EGO_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x = 184.5, y=-5.5, z = 0.5),
-    carla.Rotation(yaw=180)  #ready to reverse direction (retromarcia)
+    carla.Location(x=-30.0, y=-30, z=0.5),
+    carla.Rotation(yaw=0)  #ready to reverse direction (retromarcia)
 )
 
 BLOCKING_VEHICLE_TRANSFORMS = [
     carla.Transform(
-        carla.Location(x=-184.5, y=-3.0, z=0.5),
-        carla.Rotation(yaw=180)
+        carla.Location(x=-30.0, y=-27.0, z=0.5),
+        carla.Rotation(yaw=0)
     ),
     carla.Transform(
-        carla.Location(x=-184.5, y=-8.0, z=0.5),
-        carla.Rotation(yaw=180)
+        carla.Location(x=-30.0, y=-32.8, z=0.5),
+        carla.Rotation(yaw=0)
     ),
      carla.Transform(
-        carla.Location(x=-184.5, y=-10.5, z=0.5),
-        carla.Rotation(yaw=180)
+        carla.Location(x=-30.0, y=-35.5, z=0.5),
+        carla.Rotation(yaw=0)
     )
 ]
 
