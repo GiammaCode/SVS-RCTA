@@ -2,7 +2,6 @@ import carla
 import time
 
 import config
-import carla_bridge.sensor_callbacks as sensor_manager
 import scenarios.parking_lot_scenario as parking_lot
 from carla_bridge.carla_manager import CarlaManager
 from carla_bridge.spawner import Spawner
