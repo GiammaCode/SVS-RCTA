@@ -1,5 +1,11 @@
 # Smart Vehicular Systems Project: Rear Cross Traffic Alert (RCTA)
 
+## Command
+- py -3.7 -m venv .venv
+- .\.venv\Scripts\Activate.ps1
+- python -m pip install --upgrade pip
+- pip install -r requirements.txt
+
 This project consists of the implementation of an advanced **Rear Cross Traffic Alert (RCTA)** system using the 
 **CARLA 0.9.15** simulator. 
 
