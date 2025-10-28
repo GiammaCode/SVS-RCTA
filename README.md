@@ -53,66 +53,60 @@ Step 4: Sviluppo Scenario Dinamico
 
 **Test Milestone**: Eseguendo main.py, dovresti vedere la tua ego_vehicle ferma e l'auto "target" che le attraversa la strada sul retro.
 
-### Fase 3: Implementazione RCTA (Solo Radar)
-Costruiamo la logica RCTA base usando solo il radar. È più semplice e ci dà una base funzionante.
+### Fase 3: Implementazione RCTA (Vision-Only)
 
-Step 5: Implementazione Percezione (Radar)
-- Sviluppa carla_bridge/sensor_manager.py per creare e attaccare un sensore radar (con i parametri da config.py).
-- Sviluppa rcta_system/perception.py. In questa fase, conterrà solo la funzione di callback del radar.
-- La callback deve elaborare i dati grezzi del radar per identificare i rilevamenti rilevanti (oggetti in movimento, 
-con la loro distanza e velocità).
-- Test Milestone: main.py deve spawnare il radar e stampare a console i dati rilevati (es. "Oggetto rilevato a X metri,
-velocità Y m/s") solo quando l'auto "target" passa.
+Step 5: Setup Telecamere e Object Detection
+- Modifica config.py per aggiungere i parametri di 3 telecamere:
+REAR_CAMERA_TRANSFORM (centrale, guarda indietro).
+RCTA_LEFT_CAMERA_TRANSFORM (angolo posteriore sinistro, guarda a sinistra).
+RCTA_RIGHT_CAMERA_TRANSFORM (angolo posteriore destro, guarda a destra).
+
+- Sviluppa carla_bridge/sensor_manager.py con una nuova funzione setup_rcta_cameras() per creare e attaccare queste 
+3 telecamere all'ego_vehicle.
+- Sviluppa rcta_system/object_detector.py. Questa classe deve:
+- Caricare un modello pre-addestrato (es. YOLOv5s) da models/.
+- Fornire un metodo detect(image) che riceve un'immagine CARLA (convertita in numpy) e restituisce una lista 
+di rilevamenti (es. [{'class': 'car', 'confidence': 0.9, 'bbox': [x1, y1, x2, y2]}]).
+- Sviluppa rcta_system/perception.py:
+Crea un'istanza di ObjectDetector.
+Crea 3 funzioni di callback separate (una per ogni telecamera: rear_cam_callback, left_cam_callback, right_cam_callback).
+Ogni callback passa l'immagine ricevuta al metodo detect() dell'ObjectDetector.
+Archivia i risultati in una variabile (es. self.detected_objects).
+
+**Test Milestone:** Aggiorna main.py per mostrare i 3 feed video usando cv2.imshow(). I video devono mostrare 
+i bounding box disegnati sugli oggetti rilevati (il camion target).
+
 
 Step 6: Implementazione Logica Decisionale e HMI (MQTT)
-- Sviluppa rcta_system/decision_making.py. Questa classe riceve i dati dal modulo di percezione.
 
-Implementa la logica:
+- Sviluppa rcta_system/decision_making.py. Questa classe:
+Riceve la lista di detected_objects dal modulo di percezione.
+Riceve lo stato del veicolo (per sapere se è in retromarcia).
+Logica Base: Se (il veicolo è in retromarcia) E (la lista detected_objects non è vuota), restituisce la 
+lista degli oggetti pericolosi.
 
-- Controlla se l'ego_vehicle è in retromarcia (dovrai passare l'oggetto ego_vehicle o il suo stato).
-- Se sì, calcola il rischio (es. TTC o distanza) in base ai dati del radar.
-- Restituisce uno stato: SAFE, WARN_LEFT, WARN_RIGHT.
-- Sviluppa hmi/mqtt_publisher.py per inviare questo stato a un topic MQTT.
-- Sviluppa hmi/hmi_display.py per ricevere e stampare l'avviso.
+- Sviluppa hmi/mqtt_publisher.py per connettersi al broker.
+- Aggiorna main.py: nel ciclo principale, chiama la logica decisionale. Se ci sono oggetti pericolosi, 
+usa mqtt_publisher per inviare un messaggio al topic rcta/alerts. Il messaggio deve contenere le classi 
+degli oggetti rilevati (es. {"alert": true, "objects": ["car", "person"]}).
 
-**Test Milestone**: Avviando hmi_display.py, main.py e muovendo l'auto in retromarcia, dovresti vedere gli avvisi apparire 
-nel terminale HMI solo quando l'auto "target" attraversa.
+Sviluppa hmi/hmi_display.py (script separato) per iscriversi al topic rcta/alerts e stampare i messaggi ricevuti.
 
-### Fase 4: Implementazione Sensor Fusion (Aggiunta Camera)
-Ora rendiamo il sistema più intelligente aggiungendo la visione.
+**Test Milestone:** Avvia hmi_display.py e main.py. Metti l'auto in retromarcia (puoi forzarlo nel codice all'inizio). 
+Quando il camion "target" passa, il terminale HMI deve stampare un messaggio tipo "Rilevato: ['car']".
 
-Step 7: Implementazione Object Detection (Camera)
-- Scarica un modello pre-addestrato (es. yolov5s.pt) e salvalo in models/.
-- Espandi sensor_manager.py per spawnare anche le due telecamere RGB posteriori.
-- Sviluppa rcta_system/object_detector.py. Questa classe deve:
-- Caricare il modello YOLO (usando torch.hub.load).
-- Fornire un metodo detect(image) che restituisca i bounding box e le classi.
-- Espandi rcta_system/perception.py per avere la callback della telecamera.
+### Fase 4: Test Finale e Documentazione
+Step 7: Test Avanzato e Logica di Rischio
 
-**Test Milestone**: Usa cv2.imshow per mostrare il feed della telecamera posteriore con i bounding box disegnati sopra. Verifica che l'auto "target" venga riconosciuta.
+- Migliora la logica in decision_making.py. Invece di un semplice "se rileva, avvisa", rendila più intelligente:
+- Direzionalità: Usa l'ID della telecamera che ha fatto il rilevamento per inviare un avviso specifico 
+(es. "PERICOLO A SINISTRA" se rilevato dalla left_cam_callback).
+- Filtro Classi: Ignora oggetti non pericolosi (es. 'panchina', 'palo') e dai priorità alta a 'person', 'bicycle'.
+- Modifica lo scenario in parking_lot_scenario.py per spawnare un pedone invece di un camion e verifica che il 
+sistema lo rilevi correttamente.
+- Testa i casi limite (es. l'oggetto è lontano? L'oggetto è fermo?).
 
-Step 8: Implementazione Logica di Fusione
-Questo è lo step più complesso, tutto dentro rcta_system/perception.py.
-
-- Dovrai implementare la logica di Mid-Level Fusion:
-- Proietta i punti 3D del radar (che hanno distance e velocity) sul piano 2D dell'immagine della telecamera.
-- Controlla quali punti radar cadono all'interno dei bounding box rilevati da YOLO.
-- Crea una nuova lista di "Oggetti Fusi", che contenga: (Classe: 'vehicle', Distanza: 15m, Velocità: 5m/s).
-- Modifica il modulo di percezione affinché fornisca questa lista di "Oggetti Fusi" al modulo decisionale.
-
-### Fase 5: Test Finale e Documentazione
-Step 9: Aggiornamento Logica Decisionale e Test Completo
-
-- Aggiorna rcta_system/decision_making.py per usare gli "Oggetti Fusi".
-- Ora la logica può essere più intelligente (es. "ignora gli oggetti classificati come 'static', dai priorità a 'pedestrian'").
-
-Esegui test completi:
-
-- Funziona con veicoli?
-- Funziona con pedoni? (Modifica lo scenario).
-- Ignora gli oggetti statici?
-- Si attiva solo in retromarcia?
-- Step 10: Scrittura Report e Pulizia Codice
-- Scrivi il report finale del progetto, documentando l'architettura, la logica di fusione e i risultati dei test.
+Step 8: Scrittura Report e Pulizia Codice
+- Scrivi il report finale documentando la nuova architettura "vision-only", le posizioni delle telecamere, 
+il modello di object detection usato e i risultati dei test.
 - Rivedi il codice, aggiungi commenti e assicurati che README.md sia aggiornato.
-
