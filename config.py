@@ -9,7 +9,7 @@ HOST = 'localhost'
 PORT = 2000
 TIMEOUT = 10
 
-#Scenarios setting
+#_____________________________________SCENARIO SETTING________________________
 MAP_NAME = 'Town05'
 
 #EGO vehicle
@@ -41,7 +41,6 @@ BLOCKING_VEHICLE_TRANSFORMS = [
     )
 ]
 
-
 #target vehicle
 TARGET_VEHICLE_MODEL = 'vehicle.mercedes.sprinter'
 TARGET_SPAWN_TRANSFORM = carla.Transform(
@@ -51,6 +50,26 @@ TARGET_SPAWN_TRANSFORM = carla.Transform(
 #2 m/s (circa 7 km/h)
 TARGET_VELOCITY = carla.Vector3D(x=0, y=2.0, z=0)
 
+#_____________________________________CAMERAS SETTING________________________
+CAMERA_IMAGE_WIDTH = 640
+CAMERA_IMAGE_HEIGHT = 480
+CAMERA_FOV = "90"
 
+REAR_CAMERA_TRANSFORM = carla.Transform(
+    carla.Location(x=-2.0, y=0.0, z=1.0),
+    carla.Rotation(yaw =180)
+)
+
+RCTA_LEFT_CAMERA_TRANSFORM = carla.Transform(
+    carla.Location(x=-0.5, y=-0.9, z=0.5),
+    carla.Rotation(yaw =-90)
+)
+
+RCTA_RIGHT_CAMERA_TRANSFORM = carla.Transform(
+    carla.Location(x=-0.5, y=0.9, z=0.5),
+    carla.Rotation(yaw=-90)
+)
+
+YOLO_MODEL_PATH = 'models/yolov5s.pt'
 
 
