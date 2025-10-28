@@ -40,15 +40,14 @@ BLOCKING_VEHICLE_TRANSFORMS = [
     )
 ]
 
-# Emergency Braking System (EBS) settings
-TTC_THRESHOLD = 2 #seconds
-STABLE_DETECTION_THRESHOLD = 3 #number of consecutive "true"
+TARGET_VEHICLE_MODEL = 'vehicle.mercedes.sprinter'
+TARGET_SPAWN_TRANSFORM = carla.Transform(
+    carla.Location(x=-35.0, y=-40.0, z=0.5),  # Posizione di spawn (aggiornata per il nuovo parcheggio)
+    carla.Rotation(yaw=90)                  # Rotazione (verso sud, asse Y negativo)
+)
+# Si muove a 8 m/s (circa 29 km/h) lungo l'asse Y negativo.
+TARGET_VELOCITY = carla.Vector3D(x=0, y=-8.0, z=0)
 
-#RADAR value
-RADAR_RANGE = 50.0 #meters
-RADAR_HORIZONTAL_FOV = 45 #degrees
-RADAR_VERTICAL_FOV = 30 #degrees
-RADAR_POINTS_PER_SECOND = 1500
 
 
 
