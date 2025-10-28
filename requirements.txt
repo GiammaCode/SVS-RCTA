@@ -1,9 +1,14 @@
-
 carla==0.9.15
+
 numpy<=1.21.6
+pandas
+
 opencv-python==4.8.0.76
+
 torch
 torchvision
+ultralytics
+
 pygame==2.6.1
 
 paho-mqtt

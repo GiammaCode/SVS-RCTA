@@ -2,6 +2,8 @@ import torch
 import numpy as np
 import config
 
+
+
 class ObjectDetector:
     """
     Wrapper for the model YOLOv5
@@ -12,7 +14,7 @@ class ObjectDetector:
         """
         print(f"loading of YOLO model from {model_path}")
         try:
-            self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path)
+            self.model = torch.hub.load('ultralytics/yolov5:v6.1', 'custom', path=model_path)
             self.model.conf = 0.5 #Soglia di confidenza
             self.model.iou = 0.45 #soglia IoU per NMS
             #setting filter class [car, pedestrian, bike]
@@ -22,6 +24,7 @@ class ObjectDetector:
 
         except Exception as e:
             print("ERROR: not possible to load YOLOv5")
+            print(e)
             self.model = None
 
     def detect(self, bgr_image):
