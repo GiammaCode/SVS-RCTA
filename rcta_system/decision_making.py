@@ -3,7 +3,7 @@ import numpy as np
 
 class DecisionMaker:
     """
-    Analizza i rilevamenti e lo stato del veicolo per determinare i pericoli.
+    Analyze the detected object and the vehicle state.
     """
 
     def __init__(self):
