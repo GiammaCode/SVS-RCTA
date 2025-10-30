@@ -70,6 +70,6 @@ RCTA_RIGHT_CAMERA_TRANSFORM = carla.Transform(
     carla.Rotation(yaw=90)
 )
 
-YOLO_MODEL_PATH = 'models/yolov5s.pt'
+YOLO_MODEL_PATH = 'models/yolov8n.pt'
 
 
