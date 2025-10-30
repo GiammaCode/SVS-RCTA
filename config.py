@@ -9,6 +9,11 @@ HOST = 'localhost'
 PORT = 2000
 TIMEOUT = 10
 
+#_____________________________________MQTT SETTING________________________
+MQTT_BROKER = HOST
+MQTT_PORT = 1883
+MQTT_TOPIC_ALERTS = "rcta/alerts"
+
 #_____________________________________SCENARIO SETTING________________________
 MAP_NAME = 'Town05'
 

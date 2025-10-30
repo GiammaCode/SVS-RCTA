@@ -9,6 +9,10 @@ from carla_bridge.sensor_manager import SensorManager
 from scenarios.parking_lot_scenario import setup_parking_scenario, setup_parking_scenario_with_pedestrian
 from rcta_system.perception import RctaPerception
 
+from rcta_system.perception import RctaPerception
+from rcta_system.decision_making import DecisionMaker
+from hmi.mqtt_publisher import MqttPublisher
+
 def draw_detections(image, detections):
     """
     draws bounding box and image tag.
@@ -34,17 +38,28 @@ def main():
 
             #initialize spawner
             spawner = Spawner(manager.world, manager.actor_list)
-            #ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
+            ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
 
-            #if not ego_vehicle or not target_vehicle:
-            #    print("Error, scenario creation failed")
-            #    return
+            if not ego_vehicle or not target_vehicle:
+                print("Error, scenario creation failed")
+                return
 
-            ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
+            #ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
 
             print("Initializing Perception and Sensor Manager...")
             perception_system = RctaPerception()
             sensor_manager = SensorManager(manager.world, manager.actor_list)
+
+            # --- NUOVA INIZIALIZZAZIONE ---
+            print("Initializing Decision Maker and HMI Publisher...")
+            decision_maker = DecisionMaker()
+            # Usiamo HOST e PORT da config.py
+            mqtt_publisher = MqttPublisher(
+                broker_address=config.MQTT_BROKER,
+                port=config.MQTT_PORT
+            )
+            mqtt_publisher.connect()
+            # --- FINE NUOVA INIZIALIZZAZIONE ---
 
             #initialize perception and cameras
             rear_cam, left_cam, right_cam = sensor_manager.setup_rcta_cameras(ego_vehicle)
@@ -66,9 +81,27 @@ def main():
             )
             spectator.set_transform(spectator_transform)
 
+            time.sleep(1.0)
+
             while True:
                 manager.world.tick()
-                # --- Logica di Test Milestone ---
+
+                is_reversing = True
+
+                # --- LOGICA DECISIONALE RCTA ---
+                # 1. Ottieni tutti i rilevamenti da tutte le telecamere
+                all_detections = perception_system.get_all_detections()
+
+                # 2. Valuta i pericoli
+                dangerous_objects_list = decision_maker.evaluate(
+                    all_detections,
+                    is_reversing
+                )
+
+                # 3. Pubblica lo stato via MQTT (Allarme o Libero)
+                mqtt_publisher.publish_status(dangerous_objects_list)
+                # --- FINE LOGICA RCTA ---
+
                 frames = perception_system.current_frames
                 detections = perception_system.detected_objects
 
