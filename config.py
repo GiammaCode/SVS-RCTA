@@ -50,6 +50,15 @@ TARGET_SPAWN_TRANSFORM = carla.Transform(
 #2 m/s (circa 7 km/h)
 TARGET_VELOCITY = carla.Vector3D(x=0, y=2.0, z=0)
 
+#target vehicle
+PEDESTRIAN_MODEL = 'walker.pedestrian.0001'
+PEDESTRIAN_SPAWN_TRANSFORM = carla.Transform(
+    carla.Location(x=-35.0, y=-40.0, z=0.5),
+    carla.Rotation(yaw=90)
+)
+PEDESTRIAN_DESTINATION = carla.Location(x=-35.0, y=-45.0, z=1.0)
+PEDESTRIAN_WALK_SPEED = carla.Vector3D(x=0, y=1.4, z=0)
+
 #_____________________________________CAMERAS SETTING________________________
 CAMERA_IMAGE_WIDTH = 640
 CAMERA_IMAGE_HEIGHT = 480

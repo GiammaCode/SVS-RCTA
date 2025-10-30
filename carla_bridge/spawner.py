@@ -60,3 +60,44 @@ class Spawner:
             print("ERROR: Radar sensor spawn failed")
 
         return radar_sensor
+
+    def spawn_pedestrian(self, model, spawn_point, destination, speed):
+        """
+        Creates a pedestrian and set it to walk.
+        """
+        walker_bp = self.blueprint_library.filter(model)[0]
+        if walker_bp.has_attribute('is_invincible'):
+            walker_bp.set_attribute('is_invincible', 'false')
+
+        pedestrian = self.world.try_spawn_actor(walker_bp, spawn_point)
+
+        if not pedestrian:
+            print(f"ERROR: spawned failed: {model}")
+            return None, None
+
+        print(f"spawned with successfully: {model}")
+        self.actor_list.append(pedestrian)
+
+        walker_controller_bp = self.blueprint_library.find('controller.ai.walker')
+        controller = self.world.spawn_actor(
+            walker_controller_bp,
+            carla.Transform(),
+            attach_to=pedestrian
+        )
+        if not controller:
+            print(f"ERROR: controller spawn AI failed")
+            pedestrian.destroy()
+            self.actor_list.remove(pedestrian)
+            return None, None
+
+        self.actor_list.append(controller)
+
+        controller.start()
+        controller.go_to_location(destination)
+        controller.set_max_speed(speed)
+        print(f"AI pedestrian walks to {destination} with {speed} m/s")
+
+        return pedestrian, controller
+
+
+
