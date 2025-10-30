@@ -5,9 +5,8 @@ import config
 
 class MqttPublisher:
     """
-    Gestisce la connessione e la pubblicazione al broker MQTT.
+    Manage the connection to MQTT broker and publish data.
     """
-
     def __init__(self, broker_address=config.MQTT_BROKER, port=config.MQTT_PORT):
         self.broker_address = broker_address
         self.port = port

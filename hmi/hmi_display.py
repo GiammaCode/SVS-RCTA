@@ -11,65 +11,63 @@ sys.path.append(project_root)
 try:
     import config
 except ImportError:
-    print("ERRORE: Impossibile trovare config.py. Assicurati di eseguire dalla directory 'hmi'.")
+    print("ERROR: Config not found.")
     sys.exit(1)
 
 
-# --- Fine Hack ---
-
-
 def _on_connect(client, userdata, flags, rc):
-    """Callback per quando ci si connette al broker."""
+    """
+    Callback when a connection is established.
+    """
     if rc == 0:
-        print(f"HMI Display: Connesso al broker {config.MQTT_BROKER}")
-        # Sottoscrivi al topic degli alert
+        print(f"HMI Display: Connected to the broker {config.MQTT_BROKER}")
+        #topic
         client.subscribe(config.MQTT_TOPIC_ALERTS)
-        print(f"HMI Display: Sottoscritto al topic '{config.MQTT_TOPIC_ALERTS}'")
+        print(f"HMI Display: Subscribed at the topic'{config.MQTT_TOPIC_ALERTS}'")
     else:
-        print(f"HMI Display: Connessione fallita, codice {rc}")
+        print(f"HMI Display: Connection failed {rc}")
 
 
 def _on_message(client, userdata, msg):
-    """Callback per quando si riceve un messaggio."""
+    """
+    Callback when a message is received.
+    """
     # print(f"Ricevuto messaggio raw: {msg.payload.decode()}")
     try:
-        # Decodifica il messaggio da JSON
+        # Decodifica JSON
         data = json.loads(msg.payload.decode())
 
         if data.get("alert") == True:
             objects = data.get("objects", [])
             print("\n" + "=" * 30)
-            print("   --- ! ATTENZIONE RCTA ! ---")
-            print(f"     Pericolo Rilevato: {', '.join(objects)}")
+            print("   --- ! RCTA SYSTEM ! ---")
+            print(f"     Detected danger: {', '.join(objects)}")
             print("=" * 30 + "\n")
 
         elif data.get("alert") == False:
-            print("--- RCTA: Libero ---")
+            print("--- RCTA: safe ---")
 
     except json.JSONDecodeError:
-        print(f"HMI Display: Ricevuto messaggio non JSON: {msg.payload.decode()}")
+        print(f"HMI Display: message received (not JSON): {msg.payload.decode()}")
     except Exception as e:
-        print(f"HMI Display: Errore nell'elaborare il messaggio: {e}")
+        print(f"HMI Display: Elaboration error: {e}")
 
-
+#to launch client HMI
 def main():
-    """Funzione principale per avviare il client HMI."""
     client = mqtt.Client()
     client.on_connect = _on_connect
     client.on_message = _on_message
 
     try:
         client.connect(config.MQTT_BROKER, config.MQTT_PORT, 60)
-        print("Avvio HMI Display... In attesa di messaggi...")
+        print("Run HMI Display... Wait a message...")
         # loop_forever() blocca l'esecuzione e attende i messaggi
         client.loop_forever()
 
     except ConnectionRefusedError:
-        print("\nERRORE: Impossibile connettersi al broker MQTT.")
-        print(f"Assicurati che un broker (es. Mosquitto) sia in esecuzione su {config.MQTT_BROKER}:{config.MQTT_PORT}")
-        print("Puoi avviarne uno con Docker: docker run -it -p 1883:1883 eclipse-mosquitto")
+        print("\nERRORE: Impossible to connect at MQTT broker.")
     except KeyboardInterrupt:
-        print("\nSpegnimento HMI Display...")
+        print("\nHMI Display shutting down...")
         client.disconnect()
 
 

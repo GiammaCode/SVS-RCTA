@@ -12,10 +12,13 @@ The project deliverables include:
 
 ## Command
 ```
-    py -3.7 -m venv .venv
-    .\.venv\Scripts\Activate.ps1
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
+   conda create -n mobitas python=3.7
+   conda activate mobitas
+   pip install -r requirements.txt
+   
+   
+   docker run -it -p 1883:1883 -p 9001:9001 --name mosquitto eclipse-mosquitto
+   docker start mosquitto
 ```
 
 
