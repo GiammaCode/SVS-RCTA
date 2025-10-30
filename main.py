@@ -6,7 +6,7 @@ import config
 from carla_bridge.carla_manager import CarlaManager
 from carla_bridge.spawner import Spawner
 from carla_bridge.sensor_manager import SensorManager
-from scenarios.parking_lot_scenario import setup_parking_scenario
+from scenarios.parking_lot_scenario import setup_parking_scenario, setup_parking_scenario_with_pedestrian
 from rcta_system.perception import RctaPerception
 
 def draw_detections(image, detections):
@@ -34,11 +34,13 @@ def main():
 
             #initialize spawner
             spawner = Spawner(manager.world, manager.actor_list)
-            ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
+            #ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
 
-            if not ego_vehicle or not target_vehicle:
-                print("Error, scenario creation failed")
-                return
+            #if not ego_vehicle or not target_vehicle:
+            #    print("Error, scenario creation failed")
+            #    return
+
+            ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
 
             print("Initializing Perception and Sensor Manager...")
             perception_system = RctaPerception()

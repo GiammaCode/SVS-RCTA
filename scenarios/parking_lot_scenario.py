@@ -102,3 +102,56 @@ def setup_parking_scenario(world, spawner):
     print(f"Vehicle spawned in position: {config.TARGET_SPAWN_TRANSFORM.location}")
 
     return ego_vehicle, target_vehicle
+
+def setup_parking_scenario_with_pedestrian(world, spawner):
+    """
+    Creates a static parking lot scenario for RCTA test.
+    Spawns ego_vehicle in a parking lot and adds several vehicles (static) around it.
+    Spawns also a target vehicle that moves.
+
+    :param world: carla's world object
+    :param spawner: Object to spawn actors
+    :return: ego_vehicle or None
+    """
+    print("Creating static parking lot scenario")
+
+    try:
+        ego_vehicle = spawner.spawn_vehicle(
+            model= EGO_VEHICLE_MODEL,
+            spawn_point=config.EGO_SPAWN_TRANSFORM,
+            autopilot=False
+        )
+    except AttributeError as e:
+        print(f"error: {e}")
+        return None, None
+
+    if not ego_vehicle:
+        print(f"Failure to spawn ego_vehicle for the scenario")
+        return None, None
+
+    print(f"Vehicle spawned in position: {config.EGO_SPAWN_TRANSFORM.location}")
+
+    #spawning vehicles around
+    spawned_blockers = 0
+    for transform in config.BLOCKING_VEHICLE_TRANSFORMS:
+        model  = random.choice(config.BLOCKING_VEHICLE_MODELS)
+        blocker = spawner.spawn_vehicle(
+            model=model,
+            spawn_point=transform,
+            autopilot=False
+        )
+        if blocker:
+            spawned_blockers += 1
+    print(f"Spawned {spawned_blockers} blocker vehicles")
+
+    print("Spawning pedestrian in scenario...")
+    pedestrian, pedestrian_controller = spawner.spawn_pedestrian(
+        model=config.PEDESTRIAN_MODEL,
+        spawn_point=config.PEDESTRIAN_SPAWN_TRANSFORM,
+        destination=config.PEDESTRIAN_DESTINATION,
+        speed=config.PEDESTRIAN_WALK_SPEED
+    )
+    if not pedestrian:
+        print("ERRORE: pedestrian spawn failed")
+
+    return ego_vehicle

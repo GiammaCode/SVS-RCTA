@@ -54,15 +54,15 @@ TARGET_VELOCITY = carla.Vector3D(x=0, y=2.0, z=0)
 PEDESTRIAN_MODEL = 'walker.pedestrian.0001'
 PEDESTRIAN_SPAWN_TRANSFORM = carla.Transform(
     carla.Location(x=-35.0, y=-40.0, z=0.5),
-    carla.Rotation(yaw=90)
+    carla.Rotation(yaw =90)
 )
-PEDESTRIAN_DESTINATION = carla.Location(x=-35.0, y=-45.0, z=1.0)
-PEDESTRIAN_WALK_SPEED = carla.Vector3D(x=0, y=1.4, z=0)
+PEDESTRIAN_DESTINATION = carla.Location(x=-35.0, y=-27.0, z=0.5)
+PEDESTRIAN_WALK_SPEED = 1.4
 
 #_____________________________________CAMERAS SETTING________________________
-CAMERA_IMAGE_WIDTH = 640
-CAMERA_IMAGE_HEIGHT = 480
-CAMERA_FOV = "90"
+CAMERA_IMAGE_WIDTH = 512
+CAMERA_IMAGE_HEIGHT = 384
+CAMERA_FOV = "120"
 
 REAR_CAMERA_TRANSFORM = carla.Transform(
     carla.Location(x=-2.0, y=0.0, z=1.0),
