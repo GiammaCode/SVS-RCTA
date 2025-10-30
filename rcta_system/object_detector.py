@@ -1,4 +1,3 @@
-import numpy as np
 import config
 from ultralytics import YOLO
 
@@ -14,27 +13,20 @@ class ObjectDetector:
         """
         print(f"loading of YOLO model from {model_path}")
         try:
-            # 1. Carica il modello usando la nuova API
+
             self.model = YOLO(model_path)
-
-            # 2. Ottieni i nomi delle classi dal modello (es. 'car', 'person')
             self.class_names = self.model.names
-
-            # 3. Definisci le classi che ci interessano
-            # (Questi sono i nomi delle classi di YOLOv8)
             self.target_classes = {'person', 'bicycle', 'car', 'bus', 'truck'}
-
             # Converti i nomi delle classi target in indici numerici
             self.target_class_indices = [
                 k for k, v in self.class_names.items() if v in self.target_classes
             ]
 
-            print(f"Modello YOLOv8 caricato. Classi target: {self.target_classes}")
+            print(f"YOLOv8 model loaded. Target classes: {self.target_classes}")
 
         except Exception as e:
-            print(f"ERRORE CRITICO: Impossibile caricare il modello YOLOv8 da {model_path}.")
-            print(f"Assicurati che 'ultralytics' sia installato (pip install ultralytics)")
-            print(f"Errore: {e}")
+            print(f"ERRORE: YOLOv8 loading failed:  {model_path}.")
+            print(f"Error: {e}")
             self.model = None
 
     def detect(self, bgr_image):
@@ -50,7 +42,7 @@ class ObjectDetector:
         # YOLO = RGB --> OpenCV (e CARLA) usa BGR.
         rgb_image = bgr_image[:, :, ::-1]
 
-        # Esegui l'inferenza (questo è il nuovo modo)
+        # Esegui l'inferenza
         # Filtriamo già qui per classi e confidenza per essere più veloci
         results = self.model.predict(
             rgb_image,
@@ -58,10 +50,9 @@ class ObjectDetector:
             classes=self.target_class_indices,
             conf=0.5
         )
-
         detections = []
 
-        # Estrai i risultati (questo è il nuovo modo, NIENTE PIÙ PANDAS)
+        # Estrai i risultati
         # results[0] contiene i rilevamenti per la prima (e unica) immagine
         for box in results[0].boxes.cpu().numpy():
             # Estrai le coordinate del Bounding Box

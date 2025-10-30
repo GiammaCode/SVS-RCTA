@@ -51,9 +51,9 @@ TARGET_SPAWN_TRANSFORM = carla.Transform(
 TARGET_VELOCITY = carla.Vector3D(x=0, y=2.0, z=0)
 
 #_____________________________________CAMERAS SETTING________________________
-CAMERA_IMAGE_WIDTH = 640
-CAMERA_IMAGE_HEIGHT = 480
-CAMERA_FOV = "90"
+CAMERA_IMAGE_WIDTH = 512
+CAMERA_IMAGE_HEIGHT = 386
+CAMERA_FOV = "140"
 
 REAR_CAMERA_TRANSFORM = carla.Transform(
     carla.Location(x=-2.0, y=0.0, z=1.0),

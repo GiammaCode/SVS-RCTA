@@ -8,6 +8,7 @@ class CarlaManager:
         self.client = None
         self.world = None
         self.actor_list = []
+        self.original_setting = None
 
     def __enter__(self):
         """Connection to CARLA server and gets the world"""
@@ -15,11 +16,33 @@ class CarlaManager:
         self.client = carla.Client(config.HOST, config.PORT)
         self.client.set_timeout(config.TIMEOUT)
         self.world = self.client.get_world()
+
+        # --- IMPOSTA MODALITÀ SINCRONA ---
+        # Salva le impostazioni originali per ripristinarle all'uscita
+        self.original_settings = self.world.get_settings()
+        settings = self.world.get_settings()
+
+        # Usiamo un delta fisso (20 FPS), ottimo per il ML
+        settings.synchronous_mode = True
+        settings.fixed_delta_seconds = 0.05
+
+        self.world.apply_settings(settings)
+        #print("Connection successfully. Synchronous mode enabled.")
+        # ----------------------------------
+
         print("Connection successfully")
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Destroys all tracked actors to clean up the simulation"""
+
+        # --- RIPRISTINA IMPOSTAZIONI ORIGINALI ---
+        if self.original_settings:
+            print("\nRestoring original world settings...")
+            self.world.apply_settings(self.original_settings)
+            print("Settings restored.")
+        # -----------------------------------------
+
         print("\nCleaning up actors...")
         for actor in self.actor_list:
             if actor.is_alive:

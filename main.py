@@ -8,6 +8,7 @@ from carla_bridge.spawner import Spawner
 from carla_bridge.sensor_manager import SensorManager
 from scenarios.parking_lot_scenario import setup_parking_scenario
 from rcta_system.perception import RctaPerception
+from rcta_system.controller import BasicKeyController
 
 def draw_detections(image, detections):
     """
@@ -40,6 +41,9 @@ def main():
                 print("Error, scenario creation failed")
                 return
 
+            controller = BasicKeyController(ego_vehicle)
+            print("Controller veicolo inizializzato. Usa W(Freno), S(Retromarcia), A(Sinistra), D(Destra).")
+
             print("Initializing Perception and Sensor Manager...")
             perception_system = RctaPerception()
             sensor_manager = SensorManager(manager.world, manager.actor_list)
@@ -58,17 +62,45 @@ def main():
 
             #setting spectator's view
             spectator = manager.world.get_spectator()
-            spectator_transform = carla.Transform(
-                config.EGO_SPAWN_TRANSFORM.location + carla.Location(x=20, y=10, z=10.0),
-                carla.Rotation(pitch=-45, yaw=-150)
-            )
-            spectator.set_transform(spectator_transform)
+            # spectator_transform = carla.Transform(
+            #     config.EGO_SPAWN_TRANSFORM.location + carla.Location(x=20, y=10, z=10.0),
+            #     carla.Rotation(pitch=-45, yaw=-150)
+            # )
+            # spectator.set_transform(spectator_transform)
 
             while True:
+                #manager.world.tick()
+
+                # --- 5.1 LOGICA FOLLOW-CAM SPETTATORE ---
+                # Aggiorna la posizione dello spettatore ad ogni frame
+                ego_transform = ego_vehicle.get_transform()
+                spectator_transform = carla.Transform(
+                    # Posizione: 8m dietro l'auto e 4m sopra
+                    ego_transform.location + ego_transform.get_forward_vector() * -8.0 + carla.Location(z=4.0),
+                    # Rotazione: guarda in basso (-25 gradi) e segui l'auto
+                    carla.Rotation(pitch=-25, yaw=ego_transform.rotation.yaw)
+                )
+                spectator.set_transform(spectator_transform)
+
+                # --- 5.2 GESTIONE INPUT E CONTROLLO VEICOLO ---
+                # Ottieni il tasto premuto (aspetta 1ms)
+                key = cv2.waitKey(1) & 0xFF
+
+                # Passa il tasto al controller
+                controller.parse_key(key)
+
                 manager.world.tick()
+
+                # Premi 'q' per chiudere le finestre OpenCV e uscire
+                if key == ord('q'):
+                    break
+                # --- FINE 5.1 e 5.2 ---
+
                 # --- Logica di Test Milestone ---
                 frames = perception_system.current_frames
                 detections = perception_system.detected_objects
+
+
 
                 if frames['rear'] is not None:
                     display_rear = frames['rear'].copy()
