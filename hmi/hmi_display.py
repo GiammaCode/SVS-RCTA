@@ -15,17 +15,17 @@ except ImportError:
     sys.exit(1)
 
 
-def _on_connect(client, userdata, flags, rc):
+def _on_connect(client, userdata, flags, reason_code, propertie):
     """
     Callback when a connection is established.
     """
-    if rc == 0:
+    if reason_code == 0:
         print(f"HMI Display: Connected to the broker {config.MQTT_BROKER}")
         #topic
         client.subscribe(config.MQTT_TOPIC_ALERTS)
         print(f"HMI Display: Subscribed at the topic'{config.MQTT_TOPIC_ALERTS}'")
     else:
-        print(f"HMI Display: Connection failed {rc}")
+        print(f"HMI Display: Connection failed {reason_code}")
 
 
 def _on_message(client, userdata, msg):
@@ -54,7 +54,7 @@ def _on_message(client, userdata, msg):
 
 #to launch client HMI
 def main():
-    client = mqtt.Client()
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.on_connect = _on_connect
     client.on_message = _on_message
 

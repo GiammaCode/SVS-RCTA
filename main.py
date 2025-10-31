@@ -50,30 +50,28 @@ def main():
             perception_system = RctaPerception()
             sensor_manager = SensorManager(manager.world, manager.actor_list)
 
-            # --- NUOVA INIZIALIZZAZIONE ---
+            #Initialize publisher MQTT decisionMaker
             print("Initializing Decision Maker and HMI Publisher...")
             decision_maker = DecisionMaker()
-            # Usiamo HOST e PORT da config.py
             mqtt_publisher = MqttPublisher(
                 broker_address=config.MQTT_BROKER,
                 port=config.MQTT_PORT
             )
             mqtt_publisher.connect()
-            # --- FINE NUOVA INIZIALIZZAZIONE ---
 
-            #initialize perception and cameras
+            # Initialize perception and cameras
             rear_cam, left_cam, right_cam = sensor_manager.setup_rcta_cameras(ego_vehicle)
             if not (rear_cam and left_cam and right_cam):
                 print("ERRORE: Fallimento spawn telecamere. Uscita.")
                 return
 
-            #initialize callback
+            #Initialize callback
             rear_cam.listen(perception_system.rear_cam_callback)
             left_cam.listen(perception_system.left_cam_callback)
             right_cam.listen(perception_system.right_cam_callback)
             print("Camera callback setted.")
 
-            #setting spectator's view
+            #Initialize setting spectator's view
             spectator = manager.world.get_spectator()
             spectator_transform = carla.Transform(
                 config.EGO_SPAWN_TRANSFORM.location + carla.Location(x=20, y=10, z=10.0),
@@ -88,19 +86,13 @@ def main():
 
                 is_reversing = True
 
-                # --- LOGICA DECISIONALE RCTA ---
-                # 1. Ottieni tutti i rilevamenti da tutte le telecamere
-                all_detections = perception_system.get_all_detections()
 
-                # 2. Valuta i pericoli
+                all_detections = perception_system.get_all_detections()
                 dangerous_objects_list = decision_maker.evaluate(
                     all_detections,
                     is_reversing
                 )
-
-                # 3. Pubblica lo stato via MQTT (Allarme o Libero)
                 mqtt_publisher.publish_status(dangerous_objects_list)
-                # --- FINE LOGICA RCTA ---
 
                 frames = perception_system.current_frames
                 detections = perception_system.detected_objects

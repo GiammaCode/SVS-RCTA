@@ -12,22 +12,25 @@ class MqttPublisher:
         self.port = port
         self.topic = config.MQTT_TOPIC_ALERTS
 
-        self.client = mqtt.Client()
+        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = self._on_connect
         self.client.on_disconnect = self._on_disconnect
 
         self.is_connected = False
 
-    def _on_connect(self, client, userdata, flags, rc):
-        if rc == 0:
+    def _on_connect(self, client, userdata, flags, reason_code, properties):
+        if reason_code == 0:
             print(f"HMI Publisher: Connected to the broker {self.broker_address}")
             self.is_connected = True
         else:
-            print(f"HMI Publisher: Connection failed: {rc}")
+            print(f"HMI Publisher: Connection failed: {reason_code}")
 
-    def _on_disconnect(self, client, userdata, rc):
+    def _on_disconnect(self, client, userdata, flags, reason_code, properties):
         self.is_connected = False
-        print("HMI Publisher: Disconnected to the broker.")
+        if reason_code != 0:
+            print(f"HMI Publisher: Disconnessione inaspettata: {reason_code}")
+        else:
+            print("HMI Publisher: Disconnected to the broker.")
 
     def connect(self):
         """Try to connect to the broker."""
