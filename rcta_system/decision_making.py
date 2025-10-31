@@ -8,16 +8,15 @@ class DecisionMaker:
 
     def __init__(self):
         print("DecisionMaker initializzato.")
-        # In futuro, qui si potrebbero caricare zone di pericolo, etc.
+        # In futuro, qui si potrebbero caricare zone di pericolo
 
     def evaluate(self, detected_objects, is_reversing):
         """
-        Logica decisionale principale.
+        Main decision logic.
 
-        :param detected_objects: Lista di dizionari di rilevamento da RctaPerception
-        :param is_reversing: Booleano che indica se il veicolo è in retromarcia
-        :return: Lista di stringhe delle classi pericolose rilevate (es. ['car', 'person'])
-                 o una lista vuota se non c'è pericolo.
+        :param detected_objects: List of detected objects.
+        :param is_reversing: Boolean indicating if the vehicle is reversing or not.
+        :return: List of string of dangerous objects ['car', 'person'] or void list
         """
 
         dangerous_objects_found = []
