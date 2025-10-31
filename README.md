@@ -11,6 +11,7 @@ The project deliverables include:
 * **Warning System**: Implemented via **MQTT** messages.
 
 ![image](docs/schema-RCTA.png)
+![image](docs/example.png)
 
 ## Command
 ```
