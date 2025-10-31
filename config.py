@@ -65,23 +65,27 @@ PEDESTRIAN_DESTINATION = carla.Location(x=-35.0, y=-27.0, z=0.5)
 PEDESTRIAN_WALK_SPEED = 1.4
 
 #_____________________________________CAMERAS SETTING________________________
-CAMERA_IMAGE_WIDTH = 512
-CAMERA_IMAGE_HEIGHT = 384
-CAMERA_FOV = "120"
+CAMERA_IMAGE_WIDTH = 416 #640
+CAMERA_IMAGE_HEIGHT = 416 #384
 
+
+REAR_CAMERA_FOV = "90"
 REAR_CAMERA_TRANSFORM = carla.Transform(
     carla.Location(x=-2.0, y=0.0, z=1.0),
     carla.Rotation(yaw =180)
 )
 
+
+RCTA_CAMERA_FOV = "110"
+
 RCTA_LEFT_CAMERA_TRANSFORM = carla.Transform(
-    carla.Location(x=-0.5, y=-0.9, z=0.5),
-    carla.Rotation(yaw =-90)
+    carla.Location(x=-2.0, y=-0.9, z=0.5),
+    carla.Rotation(yaw =-135)
 )
 
 RCTA_RIGHT_CAMERA_TRANSFORM = carla.Transform(
-    carla.Location(x=-0.5, y=0.9, z=0.5),
-    carla.Rotation(yaw=90)
+    carla.Location(x=-2.0, y=0.9, z=0.5),
+    carla.Rotation(yaw=135)
 )
 
 YOLO_MODEL_PATH = 'models/yolov8n.pt'

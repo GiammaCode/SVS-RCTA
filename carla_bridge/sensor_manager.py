@@ -19,37 +19,55 @@ class SensorManager:
         :param parent_vehicle: vehicle actor to attach cameras
         :return: tupla of 3 sensors (rear_cam, left_cam, right_cam)
         """
-        camera_bp = self.blueprint_library.find('sensor.camera.rgb')
-        camera_bp.set_attribute('image_size_x', str(config.CAMERA_IMAGE_WIDTH))
-        camera_bp.set_attribute('image_size_y', str(config.CAMERA_IMAGE_HEIGHT))
-        camera_bp.set_attribute('fov', config.CAMERA_FOV)
+        rear_camera_bp = self.blueprint_library.find('sensor.camera.rgb')
+        rear_camera_bp.set_attribute('image_size_x', str(config.CAMERA_IMAGE_WIDTH))
+        rear_camera_bp.set_attribute('image_size_y', str(config.CAMERA_IMAGE_HEIGHT))
+        rear_camera_bp.set_attribute('fov', config.REAR_CAMERA_FOV)
 
-        spawned_sensor={}
-        transforms = {
-            'rear':config.REAR_CAMERA_TRANSFORM,
-            'left': config.RCTA_LEFT_CAMERA_TRANSFORM,
-            'right': config.RCTA_RIGHT_CAMERA_TRANSFORM
-        }
+        rcta_camera_bp = self.blueprint_library.find('sensor.camera.depth')
+        rcta_camera_bp.set_attribute('image_size_x', str(config.CAMERA_IMAGE_WIDTH))
+        rcta_camera_bp.set_attribute('image_size_y', str(config.CAMERA_IMAGE_HEIGHT))
+        rcta_camera_bp.set_attribute('fov', config.RCTA_CAMERA_FOV)
 
-        for name, transform in transforms.items():
-            camera_sensor = self.world.try_spawn_actor(
-                camera_bp,
-                transform,
+        rear_camera = self.world.try_spawn_actor(
+                rear_camera_bp,
+                config.REAR_CAMERA_TRANSFORM,
                 attach_to = parent_vehicle
             )
+        if rear_camera:
+            self.actor_list.append(rear_camera)
+            print(f"rear camera spawned with successfully")
+        else:
+            print(f"Error, spawn rear camera failed")
 
-            if camera_sensor:
-                self.actor_list.append(camera_sensor)
-                spawned_sensor[name] = camera_sensor
-                print(f"RCTA camera {name} spawned with successfully")
-            else:
-                print(f"Error, spawn camera {name} failed")
-                spawned_sensor[name] = None
+        right_rcta_camera = self.world.try_spawn_actor(
+            rcta_camera_bp,
+            config.RCTA_RIGHT_CAMERA_TRANSFORM,
+            attach_to=parent_vehicle
+        )
+        if right_rcta_camera:
+            self.actor_list.append(right_rcta_camera)
+            print(f"right camera spawned with successfully")
+        else:
+            print(f"Error, spawn right camera failed")
+
+        left_rcta_camera = self.world.try_spawn_actor(
+            rcta_camera_bp,
+            config.RCTA_LEFT_CAMERA_TRANSFORM,
+            attach_to=parent_vehicle
+        )
+        if left_rcta_camera:
+            self.actor_list.append(left_rcta_camera)
+            print(f"left camera spawned with successfully")
+        else:
+            print(f"Error, spawn left camera failed")
+
+
 
         return(
-            spawned_sensor.get('rear'),
-            spawned_sensor.get('left'),
-            spawned_sensor.get('right'),
+           rear_camera,
+           left_rcta_camera,
+           right_rcta_camera
         )
 
 

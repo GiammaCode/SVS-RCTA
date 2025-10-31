@@ -10,6 +10,8 @@ The project deliverables include:
 * **Live Demo**: A working demonstration of the system in the simulator.
 * **Warning System**: Implemented via **MQTT** messages.
 
+![image](docs/schema-RCTA.png)
+
 ## Command
 ```
    conda create -n mobitas python=3.7
