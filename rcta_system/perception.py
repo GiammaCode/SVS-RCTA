@@ -1,5 +1,7 @@
 import numpy as np
 from rcta_system.object_detector import ObjectDetector
+import config
+import cv2
 
 class RctaPerception:
     """
@@ -7,13 +9,14 @@ class RctaPerception:
     contains sensor callback.
     """
     def __init__(self):
-        print("Strating RctaPerception (Vision-only)...")
+        print("Strating RctaPerception..")
         self.detector = ObjectDetector()
 
+        self.perception_data = {'rear': [], 'left': float('inf'), 'right': float('inf')}
         self.detected_objects = {'rear': [], 'left': [], 'right': []}
         self.current_frames = {'rear': None, 'left': None, 'right': None}
 
-    def _process_carla_image(self, carla_image):
+    def _process_rgb_image(self, carla_image):
         """
         Convert CARLA image in an NumPy array BGR
         """
@@ -22,27 +25,63 @@ class RctaPerception:
         array_bgr = array[:, :, :3]  # Prendi solo RGB (che è BGR in OpenCV)
         return array_bgr
 
+    def _process_depth_image(self, carla_image):
+        """
+        Converte un'immagine CARLA Depth in una mappa di profondità 2D (in metri).
+        Restituisce anche un'immagine normalizzata per la visualizzazione.
+        """
+        # I dati grezzi sono RGBA, dove la profondità è codificata in R, G, B
+        array = np.frombuffer(carla_image.raw_data, dtype=np.uint8)
+        array = np.reshape(array, (carla_image.height, carla_image.width, 4))
+        array = array.astype(np.float64)  # Usa float64 per evitare overflow
+
+        # Decodifica la distanza (formula standard CARLA)
+        # Distanza = (R + G * 256 + B * 256 * 256) / (256^3 - 1) * 1000
+        distance = array[:, :, 2] + array[:, :, 1] * 256 + array[:, :, 0] * 256 * 256
+        distance_meters = distance / (256 * 256 * 256 - 1) * 1000.0
+
+        # Crea un'immagine visualizzabile (normalizzata)
+        # Log-scale è migliore, ma per semplicità usiamo una normalizzazione lineare
+        # (Dividiamo per 100.0 metri come "distanza massima" per la visualizzazione)
+        normalized_frame = np.clip(distance_meters / 100.0, 0.0, 1.0) * 255.0
+        normalized_frame = normalized_frame.astype(np.uint8)
+        # Converti in 3 canali (BGR) per poterci disegnare sopra
+        display_frame = cv2.cvtColor(normalized_frame, cv2.COLOR_GRAY2BGR)
+
+        return distance_meters, display_frame
+
     def rear_cam_callback(self, image):
-        np_image = self._process_carla_image(image)
+        np_image = self._process_rgb_image(image)
         self.detected_objects['rear'] = self.detector.detect(np_image)
         self.current_frames['rear'] = np_image
 
     def left_cam_callback(self, image):
-        np_image = self._process_carla_image(image)
-        self.detected_objects['left'] = self.detector.detect(np_image)
-        self.current_frames['left'] = np_image
+        """Callback per la telecamera Depth sinistra (calcola distanza)"""
+        depth_map, display_frame = self._process_depth_image(image)
+
+        # Trova la distanza minima rilevata da questa telecamera
+        min_distance = np.min(depth_map)
+
+        self.perception_data['left'] = min_distance
+        self.current_frames['left'] = display_frame
 
     def right_cam_callback(self, image):
-        np_image = self._process_carla_image(image)
-        self.detected_objects['right'] = self.detector.detect(np_image)
-        self.current_frames['right'] = np_image
+        """Callback per la telecamera Depth destra (calcola distanza)"""
+        depth_map, display_frame = self._process_depth_image(image)
 
-    def get_all_detections(self):
+        # Trova la distanza minima rilevata da questa telecamera
+        min_distance = np.min(depth_map)
+
+        self.perception_data['right'] = min_distance
+        self.current_frames['right'] = display_frame
+
+    def get_perception_data(self):
         """
-        return a list of all object found
+        Restituisce un dizionario con tutti i dati di percezione:
+        {
+            'rear': [lista_rilevamenti_yolo],
+            'left': distanza_minima_float,
+            'right': distanza_minima_float
+        }
         """
-        return (
-                self.detected_objects['rear'] +
-                self.detected_objects['left'] +
-                self.detected_objects['right']
-        )
+        return self.perception_data

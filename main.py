@@ -26,6 +26,23 @@ def draw_detections(image, detections):
         cv2.putText(image, label, (bbox[0], bbox[1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
+
+def draw_depth_info(image, distance, ttc, is_alert):
+    """
+    Disegna le informazioni di Distanza e TTC sull'immagine di profondità.
+    """
+    # Colore del testo: Rosso se in allarme, Verde altrimenti
+    color = (0, 0, 255) if is_alert else (0, 255, 0)
+
+    dist_text = f"Dist: {distance:.2f} m"
+    ttc_text = f"TTC: {ttc:.2f} s"
+
+    # Posiziona il testo
+    cv2.putText(image, dist_text, (20, 40),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+    cv2.putText(image, ttc_text, (20, 70),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+
 def main():
     try:
         with CarlaManager() as manager:
@@ -86,10 +103,9 @@ def main():
 
                 is_reversing = True
 
-
-                all_detections = perception_system.get_all_detections()
+                perception_data = perception_system.get_perception_data()
                 dangerous_objects_list = decision_maker.evaluate(
-                    all_detections,
+                    perception_data,
                     is_reversing
                 )
                 mqtt_publisher.publish_status(dangerous_objects_list)
@@ -104,13 +120,21 @@ def main():
 
                 if frames['left'] is not None:
                     display_left = frames['left'].copy()
-                    draw_detections(display_left, detections['left'])
-                    cv2.imshow('Left RCTA Camera', display_left)
+                    dist_left = perception_data['left']
+                    ttc_left = dist_left / config.CROSS_TRAFFIC_SPEED_MS
+                    is_alert_left = "depth_left" in dangerous_objects_list
+
+                    draw_depth_info(display_left, dist_left, ttc_left, is_alert_left)
+                    cv2.imshow('Left RCTA Camera (Depth)', display_left)
 
                 if frames['right'] is not None:
                     display_right = frames['right'].copy()
-                    draw_detections(display_right, detections['right'])
-                    cv2.imshow('Right RCTA Camera', display_right)
+                    dist_right = perception_data['right']
+                    ttc_right = dist_right / config.CROSS_TRAFFIC_SPEED_MS
+                    is_alert_right = "depth_right" in dangerous_objects_list
+
+                    draw_depth_info(display_right, dist_right, ttc_right, is_alert_right)
+                    cv2.imshow('Right RCTA Camera (Depth)', display_right)
 
                 # Premi 'q' per chiudere le finestre OpenCV e uscire
                 if cv2.waitKey(1) & 0xFF == ord('q'):

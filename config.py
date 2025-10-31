@@ -90,4 +90,7 @@ RCTA_RIGHT_CAMERA_TRANSFORM = carla.Transform(
 
 YOLO_MODEL_PATH = 'models/yolov8n.pt'
 
+TTC_THRESHOLD = 2.5 #secondi
+CROSS_TRAFFIC_SPEED_MS = 2.0
+
 

@@ -1,37 +1,61 @@
 import numpy as np
+import config
 
 
 class DecisionMaker:
     """
-    Analyze the detected object and the vehicle state.
+    Analizza i dati di percezione (YOLO e Profondità) e lo stato del veicolo
+    per determinare i pericoli basati su rilevamenti e TTC.
     """
 
     def __init__(self):
-        print("DecisionMaker initializzato.")
-        # In futuro, qui si potrebbero caricare zone di pericolo
+        print("DecisionMaker initializzato (con logica TTC).")
+        # Carica le costanti dalla configurazione
+        self.ttc_threshold = config.TTC_THRESHOLD
+        self.cross_speed = config.CROSS_TRAFFIC_SPEED_MS  # m/s
 
-    def evaluate(self, detected_objects, is_reversing):
+    def evaluate(self, perception_data, is_reversing):
         """
-        Main decision logic.
+        Logica decisionale principale.
 
-        :param detected_objects: List of detected objects.
-        :param is_reversing: Boolean indicating if the vehicle is reversing or not.
-        :return: List of string of dangerous objects ['car', 'person'] or void list
+        :param perception_data: Dizionario da RctaPerception
+                                {'rear': [], 'left': float, 'right': float}
+        :param is_reversing: Booleano che indica se il veicolo è in retromarcia
+        :return: Lista di stringhe delle classi pericolose (es. ['car', 'depth_left'])
         """
 
-        dangerous_objects_found = []
+        dangerous_alerts = []
 
-        if is_reversing and detected_objects:
-            # Se siamo in retromarcia e abbiamo rilevato *qualcosa*,
-            # lo consideriamo un potenziale pericolo.
+        if not is_reversing:
+            return []  # Se non siamo in retromarcia, nessun allarme RCTA
 
-            # Usiamo un 'set' per estrarre solo i nomi unici delle classi
-            # (es. se rileva 3 'car', lo contiamo solo una volta)
-            dangerous_classes = {obj['class'] for obj in detected_objects}
+        # --- 1. Analizza la telecamera posteriore (Rilevamenti YOLO) ---
+        # Questa logica è per gli oggetti statici *direttamente* dietro
+        rear_detections = perception_data.get('rear', [])
+        if rear_detections:
+            # Estrai solo i nomi unici delle classi
+            rear_classes = {obj['class'] for obj in rear_detections}
+            dangerous_alerts.extend(list(rear_classes))
 
-            dangerous_objects_found = list(dangerous_classes)
+        # --- 2. Analizza la telecamera sinistra (TTC da Profondità) ---
+        left_distance = perception_data.get('left', float('inf'))
+        if left_distance < 100.0:  # Ignora distanze infinite o > 100m
+            # Calcola il Time-to-Collision
+            # TTC = Distanza (m) / Velocità (m/s)
+            ttc_left = left_distance / self.cross_speed
 
-            # Logica di debug
-            # print(f"DECISION: PERICOLO! Rilevati: {dangerous_objects_found}")
+            if ttc_left < self.ttc_threshold:
+                # print(f"PERICOLO SINISTRA: TTC {ttc_left:.2f}s")
+                dangerous_alerts.append("depth_left")  # Non sappiamo cosa sia, solo che è vicino
 
-        return dangerous_objects_found
+        # --- 3. Analizza la telecamera destra (TTC da Profondità) ---
+        right_distance = perception_data.get('right', float('inf'))
+        if right_distance < 100.0:
+            ttc_right = right_distance / self.cross_speed
+
+            if ttc_right < self.ttc_threshold:
+                # print(f"PERICOLO DESTRA: TTC {ttc_right:.2f}s")
+                dangerous_alerts.append("depth_right")
+
+        # Restituisce una lista di allarmi unici
+        return list(set(dangerous_alerts))
