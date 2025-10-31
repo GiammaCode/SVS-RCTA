@@ -17,7 +17,7 @@ The project deliverables include:
    pip install -r requirements.txt
    
    
-   docker run -it -p 1883:1883 -p 9001:9001 --name mosquitto eclipse-mosquitto
+   docker run -it -p 1883:1883 -p 9001:9001 --name mosquitto eclipse-mosquitto mosquitto -c /mosquitto-no-auth.conf
    docker start mosquitto
 ```
 
