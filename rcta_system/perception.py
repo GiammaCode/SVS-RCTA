@@ -28,6 +28,11 @@ class RctaPerception:
     def __init__(self):
         print("PERCEPTION [Initializing Multiprocessing System]")
 
+        self.display_frame_rear = None
+        self.display_frame_left = None
+        self.display_frame_right = None
+
+
         # Data storage (Main Process)
         default_data = {'dist': float('inf'), 'ttc': float('inf'), 'objects': []}
         self.perception_data = {
