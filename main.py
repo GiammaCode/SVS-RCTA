@@ -116,8 +116,14 @@ def main():
 
                 is_reversing = control.reverse
 
-                all_perception_data = perception_system.get_all_perception_data(True)
+                perception_system.tick()
+
+                # 2. Get the latest available data instantly
+                all_perception_data = perception_system.get_perception_data()
+
+                # 3. Decision Maker handles if we care about the data or not
                 dangerous_objects = decision_maker.evaluate(all_perception_data, is_reversing)
+
                 mqtt_publisher.publish_status(dangerous_objects)
 
                 if config.DEBUG:
@@ -150,6 +156,7 @@ def main():
         import traceback
         traceback.print_exc()
     finally:
+        perception_system.cleanup()  # Kill the processes
         if 'mqtt_publisher' in locals():
             mqtt_publisher.disconnect()
         pygame.quit()
