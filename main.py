@@ -155,8 +155,6 @@ def main():
         import traceback
         traceback.print_exc()
     finally:
-        if 'perception_system' in locals():
-            perception_system.shutdown()
         if 'mqtt_publisher' in locals():
             mqtt_publisher.disconnect()
         pygame.quit()
