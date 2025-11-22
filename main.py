@@ -10,7 +10,9 @@ from carla_bridge.sensor_manager import SensorManager
 from scenarios.parking_lot_scenario import (scenario_vehicle,
                                             scenario_bicycle,
                                             scenario_pedestrian_adult,
-                                            scenario_pedestrian_child)
+                                            scenario_pedestrian_child,
+                                            setup_rcta_base_scenario)
+
 from rcta_system.perception import RctaPerception
 from rcta_system.decision_making import DecisionMaker
 from hmi.mqtt_publisher import MqttPublisher
@@ -21,9 +23,6 @@ def draw_fused_detections(image, perception_data):
     RED = (0, 0, 255)
     YELLOW = (0,255,255)
     GREEN = (0, 255, 0)
-
-    sector_ttc = perception_data['ttc']
-    sector_dist = perception_data['dist']
 
     for det in perception_data['objects']:
         bbox = [int(c) for c in det['bbox']]
@@ -45,10 +44,6 @@ def draw_fused_detections(image, perception_data):
         cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
         cv2.putText(image, label, (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    #info_color = RED if (sector_ttc < config.TTC_THRESHOLD or sector_dist < 3.0) else GREEN
-    #info_text = f"MIN DIST: {sector_dist:.1f}m | MIN TTC: {sector_ttc:.1f}s"
-    #cv2.putText(image, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, info_color, 2)
-
 
 def main():
     pygame.init()
@@ -62,12 +57,10 @@ def main():
         with CarlaManager() as manager:
             print("MAIN [Initializing scenario]")
             spawner = Spawner(manager.world, manager.actor_list)
-            #ego_vehicle = scenario_vehicle(manager.world,spawner, True, False)
-            ego_vehicle = scenario_bicycle(manager.world,spawner, True, False)
-            #ego_vehicle = scenario_pedestrian_adult(manager.world,spawner, True, False)
-            #ego_vehicle = scenario_pedestrian_child(manager.world,spawner, True, False)
 
-
+            ego_vehicle = setup_rcta_base_scenario(manager.world, spawner, True, False)
+            if not ego_vehicle:
+                return None
 
             print("MAIN [Initializing perception and Sensor manager]")
             perception_system = RctaPerception()
@@ -94,6 +87,12 @@ def main():
             print("MAIN [Initializing spectator]")
             spectator = manager.world.get_spectator()
 
+
+            #scenario_vehicle(spawner)
+            scenario_bicycle(spawner)
+            #scenario_pedestrian_adult(spawner)
+            #scenario_pedestrian_child(spawner)
+
             time.sleep(1.0)
             running = True
             while running:
@@ -116,34 +115,34 @@ def main():
 
                 is_reversing = control.reverse
 
-                perception_system.tick()
+                st = time.time()
+                all_perception_data = perception_system.get_all_perception_data(True)
+                #print({k: v['ttc'] for k, v in all_perception_data.items()})
+                et = time.time()
+                inf_time = et - st
+                print(f"{inf_time}")
 
-                # 2. Get the latest available data instantly
-                all_perception_data = perception_system.get_perception_data()
-
-                # 3. Decision Maker handles if we care about the data or not
-                dangerous_objects = decision_maker.evaluate(all_perception_data, is_reversing)
-
+                dangerous_objects = decision_maker.evaluate(all_perception_data, True)
                 mqtt_publisher.publish_status(dangerous_objects)
 
-                # if config.DEBUG:
-                #     if perception_system.display_frame_rear is not None:
-                #         frame = perception_system.display_frame_rear
-                #         data = perception_system.perception_data['rear']
-                #         draw_fused_detections(frame, data)
-                #         cv2.imshow("REAR RGBD camera", frame)
-                #
-                #     if perception_system.display_frame_left is not None:
-                #         frame = perception_system.display_frame_left
-                #         data = perception_system.perception_data['left']
-                #         draw_fused_detections(frame, data)
-                #         cv2.imshow("LEFT RGBD camera", frame)
-                #
-                #     if perception_system.display_frame_right is not None:
-                #         frame = perception_system.display_frame_right
-                #         data = perception_system.perception_data['right']
-                #         draw_fused_detections(frame, data)
-                #         cv2.imshow("RIGHT RGBD camera", frame)
+                if config.DEBUG:
+                    if perception_system.display_frame_rear is not None:
+                        frame = perception_system.display_frame_rear
+                        data = perception_system.perception_data['rear']
+                        draw_fused_detections(frame, data)
+                        cv2.imshow("REAR RGBD camera", frame)
+
+                    if perception_system.display_frame_left is not None:
+                        frame = perception_system.display_frame_left
+                        data = perception_system.perception_data['left']
+                        draw_fused_detections(frame, data)
+                        cv2.imshow("LEFT RGBD camera", frame)
+
+                    if perception_system.display_frame_right is not None:
+                        frame = perception_system.display_frame_right
+                        data = perception_system.perception_data['right']
+                        draw_fused_detections(frame, data)
+                        cv2.imshow("RIGHT RGBD camera", frame)
 
                 cv2.waitKey(1)
                 pygame.display.flip()
@@ -156,7 +155,8 @@ def main():
         import traceback
         traceback.print_exc()
     finally:
-        perception_system.cleanup()  # Kill the processes
+        if 'perception_system' in locals():
+            perception_system.shutdown()
         if 'mqtt_publisher' in locals():
             mqtt_publisher.disconnect()
         pygame.quit()
