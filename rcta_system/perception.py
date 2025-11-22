@@ -138,7 +138,7 @@ class RctaPerception:
             del tracker_dict[track_id]
 
     # ========== METODI ASINCRONI ==========
-
+    
     async def process_rear_camera_async(self):
         """Versione asincrona di process_rear_camera"""
         if self.latest_rear_rgb is None or self.latest_rear_depth is None:
@@ -156,8 +156,8 @@ class RctaPerception:
         # Usiamo run_in_executor per non bloccare l'event loop
         loop = asyncio.get_event_loop()
         detections = await loop.run_in_executor(
-            None,
-            self.detector_rear.detect,
+            None, 
+            self.detector_rear.detect, 
             rgb_np
         )
 
